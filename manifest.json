@@ -1,0 +1,76 @@
+{
+  "manifest_version": 3,
+  "name": "订单搬运助手",
+  "version": "1.1.0",
+  "description": "从亚马逊订单详情页提取信息并填充到物流系统录单页",
+  "permissions": [
+    "storage",
+    "tabs",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://sellercentral.amazon.com/*",
+    "https://sellercentral.amazon.ca/*",
+    "https://sellercentral.amazon.com.mx/*",
+    "https://sellercentral.amazon.com.au/*",
+    "https://sellercentral.amazon.sg/*",
+    "https://sellercentral.amazon.ae/*",
+    "https://sellercentral.amazon.sa/*",
+    "https://sellercentral.amazon.co.uk/*",
+    "https://sellercentral.amazon.de/*",
+    "https://sellercentral.amazon.fr/*",
+    "https://sellercentral.amazon.it/*",
+    "https://sellercentral.amazon.es/*",
+    "https://sellercentral.amazon.nl/*",
+    "https://sellercentral.amazon.se/*",
+    "https://sellercentral.amazon.pl/*",
+    "https://sellercentral.amazon.com.be/*",
+    "http://129.204.184.34:8082/*"
+  ],
+  "background": {
+    "service_worker": "service_worker.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://sellercentral.amazon.com/*",
+        "https://sellercentral.amazon.ca/*",
+        "https://sellercentral.amazon.com.mx/*",
+        "https://sellercentral.amazon.com.au/*",
+        "https://sellercentral.amazon.sg/*",
+        "https://sellercentral.amazon.ae/*",
+        "https://sellercentral.amazon.sa/*",
+        "https://sellercentral.amazon.co.uk/*",
+        "https://sellercentral.amazon.de/*",
+        "https://sellercentral.amazon.fr/*",
+        "https://sellercentral.amazon.it/*",
+        "https://sellercentral.amazon.es/*",
+        "https://sellercentral.amazon.nl/*",
+        "https://sellercentral.amazon.se/*",
+        "https://sellercentral.amazon.pl/*",
+        "https://sellercentral.amazon.com.be/*"
+      ],
+      "js": [
+        "config/selectors.js",
+        "utils/parser.js",
+        "content_amazon.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "http://129.204.184.34:8082/*"
+      ],
+      "js": [
+        "config/selectors.js",
+        "utils/fill.js",
+        "content_logistics.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
