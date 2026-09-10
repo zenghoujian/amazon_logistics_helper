@@ -321,7 +321,7 @@
       };
 
       const countryCandidates = buildCountryCandidates(data);
-      const countryEl = Fill.firstMatch(S.country);
+      const countryEl = await Fill.retryFind(S.country);
       if (!countryCandidates.length) {
         skipped.push('目的地');
         warnings.push('国家数据缺失，需人工确认');
@@ -329,7 +329,7 @@
         missingElements.push('目的地');
         warnings.push('未找到物流系统目的地字段');
       } else if (countryEl.tagName === 'SELECT') {
-        const countryResult = Fill.setSelectByCandidates(countryEl, countryCandidates);
+        const countryResult = await Fill.retrySelectByCandidates(countryEl, countryCandidates);
         if (countryResult.ok) filled.push('目的地');
         else warnings.push('目的地下拉框未匹配到国家');
       } else if (Fill.setInputValue(countryEl, countryCandidates[0])) {

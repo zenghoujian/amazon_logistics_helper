@@ -71,8 +71,29 @@
     return Array.from(selectElement.options || []).filter(option => {
       const label = normalizeText(option.textContent);
       if (!label) return false;
-      return !(!normalizeText(option.value) && /^(请选择|please select|select)$/.test(label));
+      return !(!normalizeText(option.value) && /请选择|please select|select destination/.test(label));
     });
+  }
+
+  function syncSelectWidget(selectElement, matchedText) {
+    const id = String(selectElement.id || '');
+    const containers = [
+      id ? document.getElementById(`${id}_chosen`) : null,
+      id ? document.getElementById(`s2id_${id}`) : null,
+      selectElement.nextElementSibling
+    ].filter(Boolean);
+    let synced = false;
+
+    for (const container of containers) {
+      const label = container.matches?.('.chosen-single span, .select2-chosen, .select2-selection__rendered')
+        ? container
+        : container.querySelector?.('.chosen-single span, .select2-chosen, .select2-selection__rendered');
+      if (!label) continue;
+      label.textContent = matchedText;
+      label.setAttribute('title', matchedText);
+      synced = true;
+    }
+    return synced;
   }
 
   function setSelectByCandidates(selectElement, candidates) {
@@ -116,10 +137,14 @@
         .trigger('liszt:updated');
     }
 
+    const matchedText = String(matched.textContent || '').trim();
+    const widgetSynced = syncSelectWidget(selectElement, matchedText);
+
     return {
       ok: String(selectElement.value) === String(matched.value),
-      matchedText: String(matched.textContent || '').trim(),
-      matchedValue: matched.value
+      matchedText,
+      matchedValue: matched.value,
+      widgetSynced
     };
   }
 
@@ -152,12 +177,24 @@
     return null;
   }
 
+  async function retrySelectByCandidates(selectElement, candidates, attempts = 8, delay = 250) {
+    let result = { ok: false, matchedText: '', matchedValue: '', widgetSynced: false };
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      result = setSelectByCandidates(selectElement, candidates);
+      if (result.ok) return result;
+      if (attempt < attempts - 1) await sleep(delay);
+    }
+    return result;
+  }
+
   window.AmazonLogisticsFill = {
     normalizeText,
     firstMatch,
     allMatches,
     setInputValue,
     setSelectByCandidates,
+    retrySelectByCandidates,
+    syncSelectWidget,
     choosePrimaryPhone,
     retryFind
   };

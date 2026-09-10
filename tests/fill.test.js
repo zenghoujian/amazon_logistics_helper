@@ -33,7 +33,10 @@ class FakeSelect {
 
 const context = vm.createContext({
   window: {},
-  document: { activeElement: null },
+  document: {
+    activeElement: null,
+    getElementById: () => null
+  },
   Event: FakeEvent,
   console
 });
@@ -44,17 +47,31 @@ vm.runInContext(
 );
 
 const fill = context.window.AmazonLogisticsFill;
+const chosenLabel = {
+  textContent: '',
+  title: '',
+  setAttribute(name, value) {
+    this[name] = value;
+  }
+};
+const chosenContainer = {
+  matches: () => false,
+  querySelector: () => chosenLabel
+};
 const select = new FakeSelect([
   { textContent: '请选择目的地', value: '', selected: false },
   { textContent: 'CA 加拿大 Canada', value: 'CA', selected: false },
   { textContent: 'US 美国 UNITED STATES', value: 'US', selected: false },
   { textContent: 'UM 美国本土外小岛屿', value: 'UM', selected: false }
 ]);
+select.id = 'country';
+context.document.getElementById = id => id === 'country_chosen' ? chosenContainer : null;
 
 const usResult = fill.setSelectByCandidates(select, ['United States', 'US', 'USA', '美国']);
 assert.equal(usResult.ok, true);
 assert.equal(select.value, 'US');
 assert.deepEqual(select.events, ['input', 'change', 'blur']);
+assert.equal(chosenLabel.textContent, 'US 美国 UNITED STATES');
 
 select.events = [];
 const canadaResult = fill.setSelectByCandidates(select, ['Canada', 'CA', '加拿大']);
