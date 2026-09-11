@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "订单搬运助手",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "从亚马逊订单详情页提取信息并填充到物流系统录单页",
   "permissions": [
     "storage",
@@ -26,7 +26,8 @@
     "https://sellercentral.amazon.se/*",
     "https://sellercentral.amazon.pl/*",
     "https://sellercentral.amazon.com.be/*",
-    "http://129.204.184.34:8082/*"
+    "http://129.204.184.34:8082/*",
+    "http://120.78.183.106:8082/*"
   ],
   "background": {
     "service_worker": "service_worker.js"
@@ -63,7 +64,8 @@
     },
     {
       "matches": [
-        "http://129.204.184.34:8082/*"
+        "http://129.204.184.34:8082/*",
+        "http://120.78.183.106:8082/*"
       ],
       "js": [
         "config/selectors.js",

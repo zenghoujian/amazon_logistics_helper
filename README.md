@@ -30,6 +30,7 @@
    - 美国站和加拿大站订单都可能显示在 `sellercentral.amazon.com/orders-v3/order/...`
 2. 打开物流系统新建订单页：
    - `http://129.204.184.34:8082/gotoCreateOrder.htm`
+   - `http://120.78.183.106:8082/gotoCreateOrder.htm`
 3. 点击扩展图标
 4. 点击“读取亚马逊订单”
 5. 检查预览内容

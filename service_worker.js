@@ -22,7 +22,11 @@ const AMAZON_HOSTS = new Set([
 const AMAZON_ORDER_TAB_PATTERNS = [...AMAZON_HOSTS].map(
   hostname => `https://${hostname}/orders-v3/order/*`
 );
-const LOGISTICS_TAB_PATTERN = 'http://129.204.184.34:8082/*';
+const LOGISTICS_ORIGINS = new Set([
+  'http://129.204.184.34:8082',
+  'http://120.78.183.106:8082'
+]);
+const LOGISTICS_TAB_PATTERNS = [...LOGISTICS_ORIGINS].map(origin => `${origin}/*`);
 
 async function getStorage(keys) {
   return chrome.storage.local.get(keys);
@@ -69,12 +73,7 @@ function isAmazonUrl(url = '') {
 
 function isLogisticsUrl(url = '') {
   const parsed = parseUrl(url);
-  return Boolean(
-    parsed &&
-    parsed.protocol === 'http:' &&
-    parsed.hostname === '129.204.184.34' &&
-    parsed.port === '8082'
-  );
+  return Boolean(parsed && LOGISTICS_ORIGINS.has(parsed.origin));
 }
 
 function summarizeOrder(data) {
@@ -107,7 +106,7 @@ async function getAmazonTab() {
 }
 
 async function getLogisticsTab() {
-  const tabs = await chrome.tabs.query({ url: LOGISTICS_TAB_PATTERN });
+  const tabs = await chrome.tabs.query({ url: LOGISTICS_TAB_PATTERNS });
   return tabs.find(tab => isLogisticsUrl(tab.url)) || null;
 }
 
