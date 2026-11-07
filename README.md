@@ -43,6 +43,7 @@
 
 - 订单号优先读取 `span[data-testid="order-id-value"]`，并保留 URL/页面文本回退
 - 美国 `City, ST ZIP` 与加拿大 `City, Province A1A 1A1` 地址解析
+- 加拿大法语省名和重音字符解析，例如 `Mirabel, Québec J7N 2P7`
 - 加拿大邮编单独一行时与上一行城市/省份合并解析
 - 国家英文名、两位代码和中文名标准化，至少覆盖 US/CA/DE/FR/GB
 - 电话提取、姓名/国家去重、多行街道地址合并和缺失字段警告

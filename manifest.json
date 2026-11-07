@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "订单搬运助手",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "从亚马逊订单详情页提取信息并填充到物流系统录单页",
   "permissions": [
     "storage",

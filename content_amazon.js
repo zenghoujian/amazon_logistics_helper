@@ -150,7 +150,11 @@
     }
 
     const scope = rootEl || document.body;
-    const lines = splitLines(getElementTextWithBreaks(scope));
+    const scopeText = getElementTextWithBreaks(scope);
+    const labeledPhone = Parser?.extractLabeledPhone(scopeText);
+    if (labeledPhone && labeledPhone !== orderId) return labeledPhone;
+
+    const lines = splitLines(scopeText);
     for (const line of lines) {
       const cleaned = cleanText(line.replace(/^电话[:：]?\s*/i, ''));
       if (cleaned !== orderId && looksLikePhone(cleaned)) return cleaned;

@@ -91,4 +91,25 @@ assert.equal(rochester.postalCode, '14608-2644');
 assert.equal(rochester.phone, '+1 480-555-0100 ext. 60388');
 assert.ok(!rochester.warnings.some(item => item.includes('电话缺失')));
 
+const quebec = parser.parseAddressBlock([
+  '配送地址',
+  'Sample Recipient',
+  '100 Rue Exemple',
+  'Mirabel, Québec J7N 2P7',
+  '加拿大',
+  '联系买家:',
+  'sample-buyer',
+  '电',
+  '话: 14165550100'
+].join('\n'));
+assert.equal(quebec.recipientName, 'Sample Recipient');
+assert.equal(quebec.countryCode, 'CA');
+assert.equal(quebec.countryNormalized, 'Canada');
+assert.equal(quebec.city, 'Mirabel');
+assert.equal(quebec.state, 'Québec');
+assert.equal(quebec.postalCode, 'J7N 2P7');
+assert.equal(quebec.addressLine1, '100 Rue Exemple');
+assert.equal(quebec.phone, '14165550100');
+assert.ok(!quebec.addressLine1.includes('sample-buyer'));
+
 console.log('parser tests passed');

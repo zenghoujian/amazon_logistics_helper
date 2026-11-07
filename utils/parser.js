@@ -10,6 +10,7 @@
   ];
   const CA_PROVINCES = ['AB', 'BC', 'MB', 'NB', 'NL', 'NS', 'NT', 'NU', 'ON', 'PE', 'QC', 'SK', 'YT'];
   const REGION_PATTERN = [...US_STATES, ...CA_PROVINCES].join('|');
+  const REGION_NAME_PATTERN = "[\\p{L}][\\p{L}\\p{M} .'-]{2,}";
 
   function cleanText(value) {
     return String(value || '')
@@ -22,7 +23,7 @@
   }
 
   function cleanPhone(value) {
-    const source = cleanText(value).replace(/^(?:buyer\s+)?(?:phone(?:\s+number)?|telephone|tel|mobile|电话|電話)\s*[:：]?\s*/i, '');
+    const source = cleanText(value).replace(/^(?:buyer\s+)?(?:phone(?:\s+number)?|telephone|tel|mobile|电\s*话|電話)\s*[:：]?\s*/i, '');
     const match = source.match(/(\+?\d[\d\s().\-/]{5,}\d)(?:\s*(?:ext(?:ension)?|x|分机)\.?\s*[:：]?\s*(\d{1,10}))?/i);
     if (!match) return '';
     const baseNumber = cleanText(match[1]);
@@ -66,7 +67,12 @@
     const text = cleanText(value);
     if (!text || parseOrderIdFromText(text)) return false;
     const digits = (text.match(/\d/g) || []).length;
-    return digits >= 7 && digits <= 22 && /^(?:(?:buyer\s+)?(?:phone(?:\s+number)?|telephone|tel|mobile|电话|電話)\s*[:：]?\s*)?[+\d][\d\s().\-/]*(?:\s*(?:ext(?:ension)?|x|分机)\.?\s*[:：]?\s*\d{1,10})?$/i.test(text);
+    return digits >= 7 && digits <= 22 && /^(?:(?:buyer\s+)?(?:phone(?:\s+number)?|telephone|tel|mobile|电\s*话|電話)\s*[:：]?\s*)?[+\d][\d\s().\-/]*(?:\s*(?:ext(?:ension)?|x|分机)\.?\s*[:：]?\s*\d{1,10})?$/i.test(text);
+  }
+
+  function extractLabeledPhone(value) {
+    const match = String(value || '').match(/(?:buyer\s+)?(?:phone(?:\s+number)?|telephone|tel|mobile|电\s*话|電話)\s*[:：]?\s*\+?\d[\d\s().\-/]{5,}\d(?:\s*(?:ext(?:ension)?|x|分机)\.?\s*[:：]?\s*\d{1,10})?/i);
+    return match ? cleanPhone(match[0]) : '';
   }
 
   function isNoiseLine(value) {
@@ -90,31 +96,31 @@
     const text = cleanText(line).replace(/\s+,/g, ',');
     if (!text) return null;
 
-    let match = text.match(new RegExp(`^(.+?)(?:,\\s*|\\s+)(?:(${REGION_PATTERN})|([A-Za-z][A-Za-z .'-]{2,}))\\s+([A-Z]\\d[A-Z][ -]?\\d[A-Z]\\d)$`, 'i'));
+    let match = text.match(new RegExp(`^(.+?)(?:,\\s*|\\s+)(?:(${REGION_PATTERN})|(${REGION_NAME_PATTERN}))\\s+([A-Z]\\d[A-Z][ -]?\\d[A-Z]\\d)$`, 'iu'));
     if (match) {
       return {
         city: cleanText(match[1]).replace(/,$/, ''),
-        state: cleanText(match[2] || match[3]).toUpperCase(),
+        state: match[2] ? cleanText(match[2]).toUpperCase() : cleanText(match[3]),
         postalCode: normalizeCanadianPostal(match[4]),
         countryCodeHint: 'CA'
       };
     }
 
-    match = text.match(new RegExp(`^(.+?)(?:,\\s*|\\s+)(?:(${REGION_PATTERN})|([A-Za-z][A-Za-z .'-]{2,}))\\s+(\\d{5}(?:-\\d{4})?)$`, 'i'));
+    match = text.match(new RegExp(`^(.+?)(?:,\\s*|\\s+)(?:(${REGION_PATTERN})|(${REGION_NAME_PATTERN}))\\s+(\\d{5}(?:-\\d{4})?)$`, 'iu'));
     if (match) {
       return {
         city: cleanText(match[1]).replace(/,$/, ''),
-        state: cleanText(match[2] || match[3]).toUpperCase(),
+        state: match[2] ? cleanText(match[2]).toUpperCase() : cleanText(match[3]),
         postalCode: match[4],
         countryCodeHint: 'US'
       };
     }
 
-    match = text.match(/^(.+?),\s*([A-Za-z][A-Za-z .'-]{1,})$/);
+    match = text.match(new RegExp(`^(.+?),\\s*(${REGION_NAME_PATTERN})$`, 'iu'));
     if (match) {
       return {
         city: cleanText(match[1]),
-        state: cleanText(match[2]).toUpperCase(),
+        state: cleanText(match[2]),
         postalCode: '',
         countryCodeHint: ''
       };
@@ -153,8 +159,12 @@
 
   function parseAddressBlock(addressText, explicitPhone = '', hints = {}) {
     const warnings = [];
-    let phone = cleanPhone(explicitPhone || hints.phone || '');
-    let lines = uniqueLines(splitAddressLines(addressText));
+    const normalizedAddressText = String(addressText || '').replace(/电[ \t]*\n[ \t]*话/g, '电话');
+    let phone = cleanPhone(explicitPhone || hints.phone || '') || extractLabeledPhone(normalizedAddressText);
+    let lines = uniqueLines(splitAddressLines(normalizedAddressText));
+
+    const contactIndex = lines.findIndex(line => /^(?:联系买家|联系卖家|contact buyer|contact seller)\s*[:：]?/i.test(line));
+    if (contactIndex >= 0) lines = lines.slice(0, contactIndex);
 
     lines = lines.filter(line => {
       if (isNoiseLine(line)) return false;
@@ -222,6 +232,7 @@
   window.AmazonLogisticsParser = {
     cleanText,
     cleanPhone,
+    extractLabeledPhone,
     splitAddressLines,
     normalizeCountry,
     isKnownCountry,
